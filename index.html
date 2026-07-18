@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF, TXT & ZIP to Text Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>PDF, TXT & ZIP to Text Converter</h1>
+    
+    <div id="dropArea">
+        <p>Drag & drop PDF, TXT, or ZIP files here or click to select</p>
+        <input type="file" id="fileInput" accept=".pdf,.txt,.zip,application/pdf,text/plain,application/zip,application/x-zip-compressed" style="display: none;" multiple>
+        <button id="browseBtn">Select PDF(s), TXT(s), or ZIP(s)</button>
+        <div id="fileInfo">No files selected</div>
+        <div class="file-info">Supports single or multiple PDF, TXT, and ZIP files (ZIP extracts text and PDF files)</div>
+    </div>
+    
+    <div id="status"></div>
+    
+    <div class="controls">
+        <h2 class="section-title">Converted Text</h2>
+        <button id="clearBtn" class="clear-btn">Clear All</button>
+    </div>
+    
+    <div class="button-group">
+        <button id="copyBtn" disabled>Copy Text</button>
+        <button id="saveBtn" disabled>Save Text</button>
+    </div>
+    <textarea id="outputText" readonly placeholder="Converted text will appear here..."></textarea>
+    
+    <h2 class="section-title">Uploaded Files</h2>
+    <div class="file-list" id="fileList">
+        <div class="file-item">No files uploaded yet</div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
