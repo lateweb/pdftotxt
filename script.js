@@ -1,4 +1,5 @@
-// Set up PDF.js worker (fixed trailing spaces in URL)
+// script.js
+// Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js  ';
 
 // DOM Elements
@@ -13,8 +14,8 @@ const statusDiv = document.getElementById('status');
 const fileList = document.getElementById('fileList');
 const clearBtn = document.getElementById('clearBtn');
 
-// Set file input to accept PDF, TXT, and ZIP by default
-fileInput.accept = '.pdf,.txt,.zip,application/pdf,text/plain,application/zip,application/x-zip-compressed';
+// Set file input to accept PDF, TXT, ZIP, XLSX, and CSV
+fileInput.accept = '.pdf,.txt,.zip,.xlsx,.csv,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
 
 let uploadedFiles = [];
 let convertedText = '';
@@ -72,28 +73,25 @@ function handleFileSelect(e) {
 }
 
 function isSupportedFile(file) {
-    // Check by MIME type
     const type = file.type;
     if (type === 'application/pdf' || type === 'text/plain' ||
-        type === 'application/zip' || type === 'application/x-zip-compressed') {
+        type === 'application/zip' || type === 'application/x-zip-compressed' ||
+        type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        type === 'text/csv') {
         return true;
     }
-    // Fallback: check by extension for cases where MIME type is empty/incorrect
     const name = file.name.toLowerCase();
-    return name.endsWith('.pdf') || name.endsWith('.txt') || name.endsWith('.zip');
+    return name.endsWith('.pdf') || name.endsWith('.txt') || name.endsWith('.zip') ||
+           name.endsWith('.xlsx') || name.endsWith('.csv');
 }
 
 function getFileType(file) {
     const name = file.name.toLowerCase();
-    if (file.type === 'application/pdf' || name.endsWith('.pdf')) {
-        return 'pdf';
-    }
-    if (file.type === 'text/plain' || name.endsWith('.txt')) {
-        return 'txt';
-    }
-    if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || name.endsWith('.zip')) {
-        return 'zip';
-    }
+    if (file.type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+    if (file.type === 'text/plain' || name.endsWith('.txt')) return 'txt';
+    if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || name.endsWith('.zip')) return 'zip';
+    if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || name.endsWith('.xlsx')) return 'xlsx';
+    if (file.type === 'text/csv' || name.endsWith('.csv')) return 'csv';
     return null;
 }
 
@@ -113,12 +111,11 @@ function handleFiles(files) {
         showStatus(`Processing ${newFilesCount} new file(s)...`, 'info');
         convertNewFiles(files);
     } else {
-        showStatus('Please select valid PDF, TXT, or ZIP files', 'error');
+        showStatus('Please select valid PDF, TXT, ZIP, XLSX, or CSV files', 'error');
     }
 }
 
 function addFileToList(file) {
-    // Remove the "No files uploaded yet" message if it exists
     if (fileList.children.length === 1 && fileList.children[0].textContent === 'No files uploaded yet') {
         fileList.innerHTML = '';
     }
@@ -131,6 +128,8 @@ function addFileToList(file) {
         case 'pdf': typeLabel = '[PDF]'; break;
         case 'txt': typeLabel = '[TXT]'; break;
         case 'zip': typeLabel = '[ZIP]'; break;
+        case 'xlsx': typeLabel = '[XLSX]'; break;
+        case 'csv': typeLabel = '[CSV]'; break;
         default: typeLabel = '[?]';
     }
     fileItem.innerHTML = `
@@ -174,9 +173,12 @@ async function convertNewFiles(newFiles) {
                 text = await convertSingleTXT(file);
             } else if (fileType === 'zip') {
                 text = await convertZipFile(file);
+            } else if (fileType === 'xlsx') {
+                text = await convertSingleXLSX(file);
+            } else if (fileType === 'csv') {
+                text = await convertSingleCSV(file);
             }
             
-            // Add separator between documents (except for the first one ever)
             if (convertedText.length > 0) {
                 convertedText += '\n\n----------------------------------------\n\n';
             }
@@ -218,7 +220,6 @@ async function convertSinglePDF(file) {
     });
 }
 
-// Helper to convert PDF from ArrayBuffer
 async function convertPDFArrayBuffer(arrayBuffer, filename) {
     const typedArray = new Uint8Array(arrayBuffer);
     const loadingTask = pdfjsLib.getDocument(typedArray);
@@ -255,7 +256,80 @@ async function convertSingleTXT(file) {
     });
 }
 
-// New function to handle ZIP files
+async function convertSingleXLSX(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function() {
+            try {
+                const data = new Uint8Array(this.result);
+                const text = convertSpreadsheetFromArrayBuffer(data, file.name, 'xlsx');
+                resolve(text);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = () => reject(new Error('Error reading XLSX file'));
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+async function convertSingleCSV(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function() {
+            try {
+                const text = convertSpreadsheetFromString(this.result, file.name, 'csv');
+                resolve(text);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = () => reject(new Error('Error reading CSV file'));
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+
+function convertSpreadsheetFromArrayBuffer(buffer, filename, type) {
+    try {
+        const workbook = XLSX.read(buffer, {type: 'array'});
+        return formatWorkbookAsText(workbook, filename);
+    } catch (err) {
+        return `--- ${filename} ---\n[Error reading spreadsheet: ${err.message}]`;
+    }
+}
+
+function convertSpreadsheetFromString(str, filename, type) {
+    try {
+        const workbook = XLSX.read(str, {type: 'string'});
+        return formatWorkbookAsText(workbook, filename);
+    } catch (err) {
+        return `--- ${filename} ---\n[Error reading spreadsheet: ${err.message}]`;
+    }
+}
+
+function formatWorkbookAsText(workbook, filename) {
+    const sheetNames = workbook.SheetNames;
+    if (sheetNames.length === 0) {
+        return `--- ${filename} ---\n[No sheets found]`;
+    }
+    
+    let result = `--- ${filename} ---\n`;
+    for (let i = 0; i < sheetNames.length; i++) {
+        const sheetName = sheetNames[i];
+        const sheet = workbook.Sheets[sheetName];
+        // Convert to tab-separated values (TSV)
+        const tsv = XLSX.utils.sheet_to_csv(sheet, {FS: '\t', RS: '\n'});
+        result += `Sheet: ${sheetName}\n`;
+        if (tsv.trim() === '') {
+            result += '(empty)\n';
+        } else {
+            result += tsv + '\n';
+        }
+        if (i < sheetNames.length - 1) result += '\n';
+    }
+    return result.trimEnd();
+}
+
 async function convertZipFile(zipFile) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -268,32 +342,51 @@ async function convertZipFile(zipFile) {
                 let combinedText = '';
                 let processedCount = 0;
                 
-                // Define supported text-based extensions (case-insensitive)
-                const textExtensions = ['.txt', '.html', '.htm', '.css', '.js', '.json', '.xml', '.md'];
+                const textExtensions = ['.txt', '.html', '.htm', '.css', '.js', '.json', '.xml', '.md', '.csv'];
+                const spreadsheetExtensions = ['.xlsx'];
+                const pdfExtension = '.pdf';
+                
                 const isTextFile = (name) => textExtensions.some(ext => name.toLowerCase().endsWith(ext));
-                const isPdfFile = (name) => name.toLowerCase().endsWith('.pdf');
+                const isSpreadsheetFile = (name) => spreadsheetExtensions.some(ext => name.toLowerCase().endsWith(ext));
+                const isPdfFile = (name) => name.toLowerCase().endsWith(pdfExtension);
                 
                 const supportedEntries = entries.filter(entry => 
-                    !entry.dir && (isTextFile(entry.name) || isPdfFile(entry.name))
+                    !entry.dir && (isTextFile(entry.name) || isSpreadsheetFile(entry.name) || isPdfFile(entry.name))
                 );
                 const totalSupported = supportedEntries.length;
                 
                 for (const entry of entries) {
-                    if (entry.dir) continue; // skip folders
+                    if (entry.dir) continue;
                     
                     const name = entry.name;
                     if (isTextFile(name)) {
-                        // Extract text file
-                        const content = await entry.async('string');
-                        const text = content.trim();
-                        if (text) {
-                            if (combinedText.length > 0) combinedText += '\n\n--- ' + name + ' ---\n\n';
+                        // Normal text or CSV inside ZIP
+                        if (name.toLowerCase().endsWith('.csv')) {
+                            const csvStr = await entry.async('string');
+                            const text = convertSpreadsheetFromString(csvStr, name, 'csv');
+                            if (combinedText.length > 0) combinedText += '\n\n';
                             combinedText += text;
                             processedCount++;
                             showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                        } else {
+                            const content = await entry.async('string');
+                            const text = content.trim();
+                            if (text) {
+                                if (combinedText.length > 0) combinedText += '\n\n--- ' + name + ' ---\n\n';
+                                combinedText += text;
+                                processedCount++;
+                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                            }
                         }
+                    } else if (isSpreadsheetFile(name)) {
+                        // XLSX inside ZIP
+                        const data = await entry.async('arraybuffer');
+                        const text = convertSpreadsheetFromArrayBuffer(data, name, 'xlsx');
+                        if (combinedText.length > 0) combinedText += '\n\n';
+                        combinedText += text;
+                        processedCount++;
+                        showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
                     } else if (isPdfFile(name)) {
-                        // Extract PDF and convert
                         const pdfData = await entry.async('arraybuffer');
                         try {
                             const pdfText = await convertPDFArrayBuffer(pdfData, name);
@@ -313,7 +406,7 @@ async function convertZipFile(zipFile) {
                 }
                 
                 if (combinedText.trim() === '') {
-                    resolve('[No supported files found inside ZIP (supported: .txt, .pdf, .html, .css, .js, .json, .xml, .md)]');
+                    resolve('[No supported files found inside ZIP (supported: .txt, .pdf, .csv, .xlsx, .html, .css, .js, .json, .xml, .md)]');
                 } else {
                     resolve(combinedText);
                 }
@@ -382,4 +475,4 @@ function showStatus(message, type) {
             statusDiv.style.display = 'none';
         }, 3000);
     }
-}
+}S
