@@ -1,4 +1,7 @@
 // script.js
+// Requires: PDF.js (loaded via CDN), JSZip (loaded via CDN), SheetJS (XLSX) – load xlsx.full.min.js from CDN
+// Example: <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js  ';
 
@@ -70,6 +73,10 @@ function handleFileSelect(e) {
     if (e.target.files.length) {
         handleFiles(e.target.files);
     }
+}
+
+function isSheetJSAvailable() {
+    return typeof XLSX !== 'undefined';
 }
 
 function isSupportedFile(file) {
@@ -257,6 +264,9 @@ async function convertSingleTXT(file) {
 }
 
 async function convertSingleXLSX(file) {
+    if (!isSheetJSAvailable()) {
+        return `--- ${file.name} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+    }
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function() {
@@ -274,6 +284,9 @@ async function convertSingleXLSX(file) {
 }
 
 async function convertSingleCSV(file) {
+    if (!isSheetJSAvailable()) {
+        return `--- ${file.name} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+    }
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function() {
@@ -290,6 +303,9 @@ async function convertSingleCSV(file) {
 }
 
 function convertSpreadsheetFromArrayBuffer(buffer, filename, type) {
+    if (!isSheetJSAvailable()) {
+        return `--- ${filename} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+    }
     try {
         const workbook = XLSX.read(buffer, {type: 'array'});
         return formatWorkbookAsText(workbook, filename);
@@ -299,6 +315,9 @@ function convertSpreadsheetFromArrayBuffer(buffer, filename, type) {
 }
 
 function convertSpreadsheetFromString(str, filename, type) {
+    if (!isSheetJSAvailable()) {
+        return `--- ${filename} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+    }
     try {
         const workbook = XLSX.read(str, {type: 'string'});
         return formatWorkbookAsText(workbook, filename);
@@ -363,11 +382,18 @@ async function convertZipFile(zipFile) {
                         // Normal text or CSV inside ZIP
                         if (name.toLowerCase().endsWith('.csv')) {
                             const csvStr = await entry.async('string');
-                            const text = convertSpreadsheetFromString(csvStr, name, 'csv');
-                            if (combinedText.length > 0) combinedText += '\n\n';
-                            combinedText += text;
-                            processedCount++;
-                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                            if (!isSheetJSAvailable()) {
+                                if (combinedText.length > 0) combinedText += '\n\n';
+                                combinedText += `--- ${name} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+                                processedCount++;
+                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                            } else {
+                                const text = convertSpreadsheetFromString(csvStr, name, 'csv');
+                                if (combinedText.length > 0) combinedText += '\n\n';
+                                combinedText += text;
+                                processedCount++;
+                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                            }
                         } else {
                             const content = await entry.async('string');
                             const text = content.trim();
@@ -381,11 +407,18 @@ async function convertZipFile(zipFile) {
                     } else if (isSpreadsheetFile(name)) {
                         // XLSX inside ZIP
                         const data = await entry.async('arraybuffer');
-                        const text = convertSpreadsheetFromArrayBuffer(data, name, 'xlsx');
-                        if (combinedText.length > 0) combinedText += '\n\n';
-                        combinedText += text;
-                        processedCount++;
-                        showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                        if (!isSheetJSAvailable()) {
+                            if (combinedText.length > 0) combinedText += '\n\n';
+                            combinedText += `--- ${name} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
+                            processedCount++;
+                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                        } else {
+                            const text = convertSpreadsheetFromArrayBuffer(data, name, 'xlsx');
+                            if (combinedText.length > 0) combinedText += '\n\n';
+                            combinedText += text;
+                            processedCount++;
+                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                        }
                     } else if (isPdfFile(name)) {
                         const pdfData = await entry.async('arraybuffer');
                         try {
@@ -475,4 +508,4 @@ function showStatus(message, type) {
             statusDiv.style.display = 'none';
         }, 3000);
     }
-}S
+}
