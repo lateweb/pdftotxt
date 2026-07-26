@@ -1,6 +1,5 @@
 // script.js
-// Requires: PDF.js (loaded via CDN), JSZip (loaded via CDN), SheetJS (XLSX) – load xlsx.full.min.js from CDN
-// Example: <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+// Requires: PDF.js, JSZip, SheetJS (XLSX), and Font Awesome (icons) loaded via CDN in HTML
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js  ';
@@ -13,11 +12,10 @@ const fileInfo = document.getElementById('fileInfo');
 const copyBtn = document.getElementById('copyBtn');
 const saveBtn = document.getElementById('saveBtn');
 const outputText = document.getElementById('outputText');
-const statusDiv = document.getElementById('status');
+const statusSpan = document.getElementById('status');   // now an inline span
 const fileList = document.getElementById('fileList');
 const clearBtn = document.getElementById('clearBtn');
 
-// Set file input to accept PDF, TXT, ZIP, XLSX, and CSV
 fileInput.accept = '.pdf,.txt,.zip,.xlsx,.csv,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
 
 let uploadedFiles = [];
@@ -33,7 +31,6 @@ copyBtn.addEventListener('click', copyText);
 saveBtn.addEventListener('click', saveText);
 clearBtn.addEventListener('click', clearAll);
 
-// Drag and drop functionality
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false);
 });
@@ -336,7 +333,6 @@ function formatWorkbookAsText(workbook, filename) {
     for (let i = 0; i < sheetNames.length; i++) {
         const sheetName = sheetNames[i];
         const sheet = workbook.Sheets[sheetName];
-        // Convert to tab-separated values (TSV)
         const tsv = XLSX.utils.sheet_to_csv(sheet, {FS: '\t', RS: '\n'});
         result += `Sheet: ${sheetName}\n`;
         if (tsv.trim() === '') {
@@ -379,7 +375,6 @@ async function convertZipFile(zipFile) {
                     
                     const name = entry.name;
                     if (isTextFile(name)) {
-                        // Normal text or CSV inside ZIP
                         if (name.toLowerCase().endsWith('.csv')) {
                             const csvStr = await entry.async('string');
                             if (!isSheetJSAvailable()) {
@@ -405,7 +400,6 @@ async function convertZipFile(zipFile) {
                             }
                         }
                     } else if (isSpreadsheetFile(name)) {
-                        // XLSX inside ZIP
                         const data = await entry.async('arraybuffer');
                         if (!isSheetJSAvailable()) {
                             if (combinedText.length > 0) combinedText += '\n\n';
@@ -498,14 +492,17 @@ function clearAll() {
     showStatus('All data cleared', 'info');
 }
 
+/* Updated showStatus to use inline span */
 function showStatus(message, type) {
-    statusDiv.textContent = message;
-    statusDiv.className = type;
-    statusDiv.style.display = 'block';
-    
+    statusSpan.textContent = message;
+    statusSpan.className = 'status-badge visible ' + type; // type may be success/error/info (unused visually but kept for possible extensions)
+    // Auto-hide after 3 seconds for success messages
     if (type === 'success') {
         setTimeout(() => {
-            statusDiv.style.display = 'none';
+            if (statusSpan.textContent === message) {
+                statusSpan.textContent = '';
+                statusSpan.className = 'status-badge';
+            }
         }, 3000);
     }
 }
