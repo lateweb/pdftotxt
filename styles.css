@@ -42,15 +42,53 @@ body {
     line-height: 1.5;
 }
 
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 h1 {
     font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.02em;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
 }
 
+/* Theme toggle */
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.theme-toggle:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* Drop area */
 #dropArea {
     border: 2px dashed var(--border-color);
     border-radius: 0;
@@ -67,6 +105,7 @@ h1 {
     border-color: var(--border-color);
 }
 
+/* Textarea */
 #outputText {
     width: 100%;
     min-height: 200px;
@@ -87,13 +126,33 @@ h1 {
     color: var(--text-muted);
 }
 
+/* Button group with inline status */
 .button-group {
     margin: 15px 0;
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
 }
 
+/* Status badge – inline, no vertical shift */
+.status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text);
+    background: var(--surface-muted);
+    white-space: nowrap;
+    display: none;           /* hidden when empty */
+    line-height: 1.2;
+}
+
+.status-badge.visible {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Buttons */
 button {
     padding: 10px 20px;
     cursor: pointer;
@@ -122,35 +181,7 @@ button:disabled:hover {
     color: var(--text);
 }
 
-#browseBtn {
-    /* No special override; matches base button */
-}
-
-#copyBtn,
-#saveBtn,
-.clear-btn {
-    /* No special color overrides */
-}
-
-#status {
-    margin: 15px 0;
-    padding: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 0;
-    display: none;
-    background-color: var(--surface-muted);
-    color: var(--text);
-    font-size: 14px;
-}
-
-.success,
-.error,
-.info {
-    background-color: var(--surface-muted);
-    color: var(--text);
-    border-color: var(--border-color);
-}
-
+/* File list */
 .file-list {
     margin-top: 15px;
     max-height: 150px;
