@@ -5,15 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File to Text Converter (PDF, TXT, ZIP, XLSX, CSV)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <a href="https://lateweb.github.io" style="font-size:13px; color:#94a3b8; text-decoration:none; display:inline-block; margin-bottom:8px;">← Lateweb</a>
-    <h1>File to Text Converter</h1>
-    
+    <div class="header">
+        <div class="header-left">
+            <a href="https://lateweb.github.io" style="font-size:13px; color:var(--text-muted); text-decoration:none; margin-right:12px;">← Lateweb</a>
+            <h1>File to Text Converter</h1>
+        </div>
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
+                <span id="themeLabel">Dark</span>
+            </button>
+        </div>
+    </div>
+
     <div id="dropArea">
         <p>Drag & drop PDF, TXT, ZIP, XLSX, or CSV files here or click to select</p>
         <input type="file" id="fileInput" accept=".pdf,.txt,.zip,.xlsx,.csv,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" style="display: none;" multiple>
@@ -21,25 +32,25 @@
         <div id="fileInfo">No files selected</div>
         <div class="file-info">Supports PDF, TXT, ZIP (extracts text/PDF/XLSX/CSV), XLSX, CSV – spreadsheets converted to TSV</div>
     </div>
-    
-    <div id="status"></div>
-    
+
     <div class="controls">
         <h2 class="section-title">Converted Text</h2>
         <button id="clearBtn" class="clear-btn">Clear All</button>
     </div>
-    
+
     <div class="button-group">
         <button id="copyBtn" disabled>Copy Text</button>
         <button id="saveBtn" disabled>Save Text</button>
+        <span id="status" class="status-badge"></span>
     </div>
     <textarea id="outputText" readonly placeholder="Converted text will appear here..."></textarea>
-    
+
     <h2 class="section-title">Uploaded Files</h2>
     <div class="file-list" id="fileList">
         <div class="file-item">No files uploaded yet</div>
     </div>
-    
+
+    <script src="theme.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
