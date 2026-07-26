@@ -31,6 +31,243 @@ body.dark {
 }
 
 body {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+}
+
+/* Theme toggle */
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.theme-toggle:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* Drop area */
+#dropArea {
+    border: 2px dashed var(--border-color);
+    border-radius: 0;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    background-color: var(--surface-muted);
+    transition: background-color 0.2s ease;
+}
+
+#dropArea.highlight {
+    background-color: var(--text);
+    color: var(--bg);
+    border-color: var(--border-color);
+}
+
+/* Textarea (output) – kept monospace */
+#outputText {
+    width: 100%;
+    min-height: 200px;
+    margin: 10px 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    background-color: var(--bg);
+    color: var(--text);
+    resize: vertical;
+    tab-size: 4;
+}
+
+#outputText::placeholder {
+    color: var(--text-muted);
+}
+
+/* Button group with inline status */
+.button-group {
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Status badge – inline, no vertical shift */
+.status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text);
+    background: var(--surface-muted);
+    white-space: nowrap;
+    display: none;           /* hidden when empty */
+    line-height: 1.2;
+}
+
+.status-badge.visible {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Buttons */
+button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    font-weight: 500;
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--text);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+button:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+button:disabled:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* File list */
+.file-list {
+    margin-top: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    padding: 10px;
+    background-color: var(--bg);
+}
+
+.file-item {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    color: var(--text);
+    margin-top: 25px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.document-separator {
+    color: var(--text-muted);
+    text-align: center;
+    margin: 20px 0;
+    font-size: 14px;
+}/* styles.css */
+:root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-muted: #f5f5f5;
+    --border-color: #000000;
+    --text: #000000;
+    --text-muted: #555555;
+    --accent: #000000;
+    --shadow: none;
+}
+
+body.dark {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface: #000000;
+    --surface-muted: #111111;
+    --border-color: #ffffff;
+    --text: #ffffff;
+    --text-muted: #aaaaaa;
+    --accent: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
