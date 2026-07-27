@@ -69,23 +69,25 @@ h1 {
     border-bottom: none;
 }
 
-/* Theme toggle */
+/* Theme toggle – clean, no box, just icons */
 .theme-toggle {
-    background: none;
-    border: 1px solid var(--border-color);
-    padding: 6px 12px;
-    font-size: 13px;
+    background: transparent;
+    border: none;
+    padding: 4px;
     cursor: pointer;
-    color: var(--text);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
     font-family: inherit;
 }
 
 .theme-toggle:hover {
-    background: var(--text);
-    color: var(--bg);
+    color: var(--text);
+}
+
+.theme-toggle svg {
+    display: block;
 }
 
 /* Drop area */
