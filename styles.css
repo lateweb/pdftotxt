@@ -80,10 +80,15 @@ h1 {
     align-items: center;
     justify-content: center;
     font-family: inherit;
+    outline: none;
 }
 
 .theme-toggle:hover {
     color: var(--text);
+}
+
+.theme-toggle:focus-visible {
+    outline: none;
 }
 
 .theme-toggle svg {
