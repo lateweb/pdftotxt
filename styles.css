@@ -82,14 +82,15 @@ h1 {
     font-family: inherit;
     outline: none; /* Removes default browser focus ring */
     box-shadow: none;
+    transition: color 0.2s ease;
 }
 
 .theme-toggle:hover,
 .theme-toggle:focus,
 .theme-toggle:focus-visible {
-    background: transparent;
-    color: var(--text);
-    outline: none; /* Ensures no square appears on click or keyboard navigation */
+    background: transparent; /* Explicitly overrides generic button:hover */
+    color: var(--text);      /* Brightens the icon */
+    outline: none; 
     box-shadow: none;
 }
 
