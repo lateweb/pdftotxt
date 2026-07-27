@@ -80,15 +80,16 @@ h1 {
     align-items: center;
     justify-content: center;
     font-family: inherit;
-    outline: none;
+    outline: none; /* Removes default browser focus ring */
+    box-shadow: none;
 }
 
-.theme-toggle:hover {
-    color: var(--text);
-}
-
+.theme-toggle:hover,
+.theme-toggle:focus,
 .theme-toggle:focus-visible {
-    outline: none;
+    color: var(--text);
+    outline: none; /* Ensures no square appears on click or keyboard navigation */
+    box-shadow: none;
 }
 
 .theme-toggle svg {
