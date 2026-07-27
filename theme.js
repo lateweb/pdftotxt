@@ -2,24 +2,27 @@
 (function() {
     'use strict';
 
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeLabel = document.getElementById('themeLabel');
+    const toggle = document.getElementById('theme-toggle');
+    const moon = document.getElementById('moon-icon');
+    const sun = document.getElementById('sun-icon');
 
     function applyTheme(theme) {
         document.body.classList.toggle('dark', theme === 'dark');
         localStorage.setItem('theme-mode', theme);
-        themeIcon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        themeLabel.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        if (moon && sun) {
+            moon.style.display = theme === 'dark' ? 'none' : 'inline';
+            sun.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
     }
 
     // Apply saved theme immediately
-    const savedTheme = localStorage.getItem('theme-mode') || 'light';
-    applyTheme(savedTheme);
+    const saved = localStorage.getItem('theme-mode') || 'light';
+    applyTheme(saved);
 
-    // Toggle on button click
-    themeToggle.addEventListener('click', () => {
-        const next = document.body.classList.contains('dark') ? 'light' : 'dark';
-        applyTheme(next);
-    });
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            const next = document.body.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(next);
+        });
+    }
 })();
