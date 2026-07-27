@@ -87,6 +87,7 @@ h1 {
 .theme-toggle:hover,
 .theme-toggle:focus,
 .theme-toggle:focus-visible {
+    background: transparent;
     color: var(--text);
     outline: none; /* Ensures no square appears on click or keyboard navigation */
     box-shadow: none;
