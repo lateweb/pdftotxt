@@ -4,6 +4,70 @@
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js  ';
 
+// Comprehensive list of text-based file extensions (Notepad‑compatible)
+const TEXT_EXTENSIONS = [
+    // General text
+    'txt', 'log',
+    // Web
+    'html', 'htm', 'css', 'scss', 'less', 'js', 'jsx', 'ts', 'tsx', 'json', 'xml', 'svg',
+    // Markdown / documentation
+    'md', 'markdown',
+    // C / C++
+    'c', 'h', 'cpp', 'hpp', 'cxx', 'cc', 'c++',
+    // C#
+    'cs', 'csx',
+    // Java / Kotlin
+    'java', 'kt', 'kts',
+    // Python
+    'py', 'pyw',
+    // R
+    'r', 'R', 'rmd', 'Rmd',
+    // Go
+    'go',
+    // Rust
+    'rs',
+    // Swift
+    'swift',
+    // Dart
+    'dart',
+    // Ruby
+    'rb',
+    // PHP
+    'php',
+    // Perl
+    'pl', 'pm',
+    // Lua
+    'lua',
+    // Shell scripts
+    'sh', 'bash', 'zsh', 'bat', 'cmd', 'ps1',
+    // Config / data
+    'ini', 'cfg', 'conf', 'yaml', 'yml', 'toml', 'env', 'gitignore', 'dockerfile', 'makefile',
+    // TeX
+    'tex', 'bib',
+    // SQL
+    'sql',
+    // Other
+    'vim', 'vimrc', 'editorconfig', 'htaccess'
+];
+
+// Build accept string dynamically for the file input
+const ACCEPT_STRING = [
+    '.pdf',
+    '.txt',
+    '.zip',
+    '.xlsx',
+    '.csv',
+    // MIME types for known formats
+    'application/pdf',
+    'text/plain',
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv',
+    // All text extensions prefixed with dot
+    ...TEXT_EXTENSIONS.map(ext => '.' + ext)
+].join(',');
+
 // DOM Elements
 const fileInput = document.getElementById('fileInput');
 const browseBtn = document.getElementById('browseBtn');
@@ -16,7 +80,7 @@ const statusSpan = document.getElementById('status');   // now an inline span
 const fileList = document.getElementById('fileList');
 const clearBtn = document.getElementById('clearBtn');
 
-fileInput.accept = '.pdf,.txt,.zip,.xlsx,.csv,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
+fileInput.accept = ACCEPT_STRING;
 
 let uploadedFiles = [];
 let convertedText = '';
@@ -78,24 +142,34 @@ function isSheetJSAvailable() {
 
 function isSupportedFile(file) {
     const type = file.type;
-    if (type === 'application/pdf' || type === 'text/plain' ||
-        type === 'application/zip' || type === 'application/x-zip-compressed' ||
+    // Known binary/structured types
+    if (type === 'application/pdf' ||
+        type === 'application/zip' ||
+        type === 'application/x-zip-compressed' ||
         type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        type === 'text/plain' ||
         type === 'text/csv') {
         return true;
     }
     const name = file.name.toLowerCase();
-    return name.endsWith('.pdf') || name.endsWith('.txt') || name.endsWith('.zip') ||
-           name.endsWith('.xlsx') || name.endsWith('.csv');
+    // PDF, ZIP, XLSX, CSV
+    if (name.endsWith('.pdf') || name.endsWith('.zip') || name.endsWith('.xlsx') || name.endsWith('.csv')) {
+        return true;
+    }
+    // Any text extension from our comprehensive list
+    return TEXT_EXTENSIONS.some(ext => name.endsWith('.' + ext));
 }
 
 function getFileType(file) {
     const name = file.name.toLowerCase();
     if (file.type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
-    if (file.type === 'text/plain' || name.endsWith('.txt')) return 'txt';
     if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || name.endsWith('.zip')) return 'zip';
     if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || name.endsWith('.xlsx')) return 'xlsx';
     if (file.type === 'text/csv' || name.endsWith('.csv')) return 'csv';
+    // For any file with a text extension (or .txt), treat as plain text
+    if (file.type === 'text/plain' || name.endsWith('.txt') || TEXT_EXTENSIONS.some(ext => name.endsWith('.' + ext))) {
+        return 'txt';
+    }
     return null;
 }
 
@@ -115,7 +189,7 @@ function handleFiles(files) {
         showStatus(`Processing ${newFilesCount} new file(s)...`, 'info');
         convertNewFiles(files);
     } else {
-        showStatus('Please select valid PDF, TXT, ZIP, XLSX, or CSV files', 'error');
+        showStatus('Please select valid files (PDF, TXT, ZIP, XLSX, CSV, or text-based source files)', 'error');
     }
 }
 
@@ -134,7 +208,7 @@ function addFileToList(file) {
         case 'zip': typeLabel = '[ZIP]'; break;
         case 'xlsx': typeLabel = '[XLSX]'; break;
         case 'csv': typeLabel = '[CSV]'; break;
-        default: typeLabel = '[?]';
+        default: typeLabel = '[TXT]'; // fallback for any text type
     }
     fileItem.innerHTML = `
         <span>${typeLabel} ${file.name}</span>
@@ -253,7 +327,7 @@ async function convertSingleTXT(file) {
         };
         
         reader.onerror = function() {
-            reject(new Error('Error reading TXT file'));
+            reject(new Error('Error reading file as text'));
         };
         
         reader.readAsText(file, 'UTF-8');
@@ -357,16 +431,22 @@ async function convertZipFile(zipFile) {
                 let combinedText = '';
                 let processedCount = 0;
                 
-                const textExtensions = ['.txt', '.html', '.htm', '.css', '.js', '.json', '.xml', '.md', '.csv'];
+                // Use the same comprehensive list inside ZIP
+                const textExtensions = TEXT_EXTENSIONS;
                 const spreadsheetExtensions = ['.xlsx'];
                 const pdfExtension = '.pdf';
+                // CSV is handled separately (via SheetJS) but we can still include it in text check;
+                // we'll handle .csv with SheetJS below, but to avoid double processing we'll treat it as spreadsheet-like.
+                const csvExtension = '.csv';
                 
-                const isTextFile = (name) => textExtensions.some(ext => name.toLowerCase().endsWith(ext));
+                const isTextFile = (name) => textExtensions.some(ext => name.toLowerCase().endsWith('.' + ext));
                 const isSpreadsheetFile = (name) => spreadsheetExtensions.some(ext => name.toLowerCase().endsWith(ext));
                 const isPdfFile = (name) => name.toLowerCase().endsWith(pdfExtension);
+                const isCsvFile = (name) => name.toLowerCase().endsWith(csvExtension);
                 
+                // Filter supported entries: any text file, spreadsheet, pdf, or csv
                 const supportedEntries = entries.filter(entry => 
-                    !entry.dir && (isTextFile(entry.name) || isSpreadsheetFile(entry.name) || isPdfFile(entry.name))
+                    !entry.dir && (isTextFile(entry.name) || isSpreadsheetFile(entry.name) || isPdfFile(entry.name) || isCsvFile(entry.name))
                 );
                 const totalSupported = supportedEntries.length;
                 
@@ -374,30 +454,29 @@ async function convertZipFile(zipFile) {
                     if (entry.dir) continue;
                     
                     const name = entry.name;
-                    if (isTextFile(name)) {
-                        if (name.toLowerCase().endsWith('.csv')) {
-                            const csvStr = await entry.async('string');
-                            if (!isSheetJSAvailable()) {
-                                if (combinedText.length > 0) combinedText += '\n\n';
-                                combinedText += `--- ${name} ---\n[Error: SheetJS library not loaded. Please include xlsx.full.min.js in your HTML.]`;
-                                processedCount++;
-                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
-                            } else {
-                                const text = convertSpreadsheetFromString(csvStr, name, 'csv');
-                                if (combinedText.length > 0) combinedText += '\n\n';
-                                combinedText += text;
-                                processedCount++;
-                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
-                            }
+                    if (isCsvFile(name)) {
+                        // CSV via SheetJS if available, otherwise plain text
+                        const csvStr = await entry.async('string');
+                        if (!isSheetJSAvailable()) {
+                            if (combinedText.length > 0) combinedText += '\n\n';
+                            combinedText += `--- ${name} ---\n${csvStr.trim()}`;
+                            processedCount++;
+                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
                         } else {
-                            const content = await entry.async('string');
-                            const text = content.trim();
-                            if (text) {
-                                if (combinedText.length > 0) combinedText += '\n\n--- ' + name + ' ---\n\n';
-                                combinedText += text;
-                                processedCount++;
-                                showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
-                            }
+                            const text = convertSpreadsheetFromString(csvStr, name, 'csv');
+                            if (combinedText.length > 0) combinedText += '\n\n';
+                            combinedText += text;
+                            processedCount++;
+                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
+                        }
+                    } else if (isTextFile(name)) {
+                        const content = await entry.async('string');
+                        const text = content.trim();
+                        if (text) {
+                            if (combinedText.length > 0) combinedText += '\n\n--- ' + name + ' ---\n\n';
+                            combinedText += text;
+                            processedCount++;
+                            showStatus(`Processing ZIP: ${name} (${processedCount}/${totalSupported})`, 'info');
                         }
                     } else if (isSpreadsheetFile(name)) {
                         const data = await entry.async('arraybuffer');
@@ -433,7 +512,7 @@ async function convertZipFile(zipFile) {
                 }
                 
                 if (combinedText.trim() === '') {
-                    resolve('[No supported files found inside ZIP (supported: .txt, .pdf, .csv, .xlsx, .html, .css, .js, .json, .xml, .md)]');
+                    resolve('[No supported files found inside ZIP (supported: .pdf, .xlsx, .csv, and hundreds of text-based formats)]');
                 } else {
                     resolve(combinedText);
                 }
@@ -495,8 +574,7 @@ function clearAll() {
 /* Updated showStatus to use inline span */
 function showStatus(message, type) {
     statusSpan.textContent = message;
-    statusSpan.className = 'status-badge visible ' + type; // type may be success/error/info (unused visually but kept for possible extensions)
-    // Auto-hide after 3 seconds for success messages
+    statusSpan.className = 'status-badge visible ' + type; // type may be success/error/info
     if (type === 'success') {
         setTimeout(() => {
             if (statusSpan.textContent === message) {
