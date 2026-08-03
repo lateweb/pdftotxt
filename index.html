@@ -4,7 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File to Text Converter (PDF, TXT, ZIP, XLSX, CSV & All Text Formats)</title>
+    <title>File to Text Converter</title>
+
+    <!-- ----- INLINE THEME SCRIPT: prevents white flash ----- -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('visa-theme');
+            const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefers)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
@@ -27,11 +39,11 @@
     </div>
 
     <div id="dropArea">
-        <p>Drag & drop PDF, TXT, ZIP, XLSX, CSV, or text-based source files (C++, C#, Python, R, and hundreds more) here or click to select</p>
+        <p>Drop PDF, TXT, ZIP, XLSX, CSV, or code files here, or click to browse.</p>
         <input type="file" id="fileInput" accept=".pdf,.txt,.zip,.xlsx,.csv,application/pdf,text/plain,application/zip,application/x-zip-compressed,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,.cpp,.h,.hpp,.cs,.py,.r,.rmd,.java,.js,.ts,.jsx,.tsx,.html,.htm,.css,.scss,.less,.json,.xml,.md,.yml,.yaml,.toml,.ini,.cfg,.conf,.sh,.bash,.bat,.ps1,.go,.rs,.swift,.kt,.rb,.php,.sql,.lua,.tex,.bib,.vim,.gitignore,.env,.dockerfile,.makefile" style="display: none;" multiple>
         <button id="browseBtn">Select File(s)</button>
         <div id="fileInfo">No files selected</div>
-        <div class="file-info">Supports PDF, TXT, ZIP (extracts text/PDF/XLSX/CSV), XLSX, CSV, and hundreds of text-based file types (C++, C#, Python, R, etc.) – spreadsheets converted to TSV</div>
+        <div class="file-info">Extracts text from documents, spreadsheets, archives, and source code files. Spreadsheets → TSV.</div>
     </div>
 
     <div class="controls">
